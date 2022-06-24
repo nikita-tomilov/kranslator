@@ -1,4 +1,4 @@
-package com.programmer74.kranslator.api
+package com.programmer74.kranslator.service.translation
 
 interface Translator {
 

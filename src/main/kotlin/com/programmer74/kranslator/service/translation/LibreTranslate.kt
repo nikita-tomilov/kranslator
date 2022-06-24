@@ -1,9 +1,7 @@
-package com.programmer74.kranslator.impl
+package com.programmer74.kranslator.service.translation
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.programmer74.kranslator.api.Translator
-import com.programmer74.kranslator.api.TranslatorLanguage
 import com.programmer74.kranslator.api.feign.LibreTranslateFeignApi
 import com.programmer74.kranslator.api.feign.LibreTranslateRequest
 import feign.Feign
