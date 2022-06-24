@@ -1,7 +1,5 @@
 package com.programmer74.kranslator.service.translation
 
-import com.programmer74.kranslator.service.translation.LibreTranslate
-import com.programmer74.kranslator.service.translation.TranslatorLanguage
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 

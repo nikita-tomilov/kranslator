@@ -14,7 +14,7 @@ import javax.imageio.ImageIO
 class LocalTesseractTest {
 
     @Test
-    fun foo() {
+    fun ocrWorks() {
         //given
         val img = testPicture()
         logger.info { img }
