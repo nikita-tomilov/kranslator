@@ -1,4 +1,4 @@
-package com.programmer74.kranslator.service
+package com.programmer74.kranslator.service.pdf
 
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.rendering.ImageType

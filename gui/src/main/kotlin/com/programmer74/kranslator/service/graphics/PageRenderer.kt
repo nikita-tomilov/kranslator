@@ -1,4 +1,4 @@
-package com.programmer74.kranslator.service
+package com.programmer74.kranslator.service.graphics
 
 import java.awt.Graphics2D
 import java.io.File

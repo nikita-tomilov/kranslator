@@ -1,12 +1,15 @@
-package com.programmer74.kranslator.service
+/*package com.programmer74.kranslator.service
 
 import com.lowagie.text.Document
 import com.lowagie.text.RectangleReadOnly
 import com.lowagie.text.pdf.PdfWriter
 import com.programmer74.kranslator.ocr.LocalTesseract
 import com.programmer74.kranslator.ocr.OCRLanguage
+import com.programmer74.kranslator.ocr.TextBlockRectangle
 import com.programmer74.kranslator.service.translation.LibreTranslate
-import com.programmer74.kranslator.api.translate.TranslatorLanguage
+import com.programmer74.kranslator.translate.TranslatorLanguage
+import com.programmer74.kranslator.service.graphics.PageRenderer
+import com.programmer74.kranslator.service.pdf.PDFConverter
 import mu.KLogging
 import org.junit.jupiter.api.Test
 import java.awt.*
@@ -54,14 +57,14 @@ class Experiments {
     document.close()
   }
 
-  private fun renderTextBlock(text: String, block: Rectangle, g: Graphics2D) {
+  private fun renderTextBlock(text: String, block: TextBlockRectangle, g: Graphics2D) {
     g.color = Color.WHITE
-    g.fillRect(block.x, block.y, block.width, block.height)
+    g.fillRect(block.x, block.y, block.w, block.h)
 
     val origStroke = g.stroke
     g.color = Color.RED
     g.stroke = BasicStroke(3.0f)
-    g.drawRect(block.x, block.y, block.width, block.height)
+    g.drawRect(block.x, block.y, block.w, block.h)
 
     g.color = Color.BLACK
     g.stroke = origStroke
@@ -69,12 +72,12 @@ class Experiments {
   }
 
   //https://stackoverflow.com/questions/12485236/finding-maximum-font-size-to-fit-in-region-java
-  private fun drawTextToFit(text: String, g: Graphics2D, maxRect: Rectangle) {
+  private fun drawTextToFit(text: String, g: Graphics2D, maxRect: TextBlockRectangle) {
     val lines = text.split("\n")
     val linesCount = lines.count()
 
-    val lineHeight = maxRect.height / linesCount
-    val lineWidth = maxRect.width
+    val lineHeight = maxRect.w / linesCount
+    val lineWidth = maxRect.h
 
     val longestLine = lines.maxByOrNull { it.length } ?: lines.first()
 
@@ -125,3 +128,4 @@ class Experiments {
     return curSize
   }
 }
+*/

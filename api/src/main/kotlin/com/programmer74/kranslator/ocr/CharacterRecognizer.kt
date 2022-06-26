@@ -1,6 +1,5 @@
 package com.programmer74.kranslator.ocr
 
-import java.awt.Rectangle
 import java.io.File
 
 interface CharacterRecognizer {
@@ -9,7 +8,14 @@ interface CharacterRecognizer {
 
 data class TextBlock(
   val text: String,
-  val block: Rectangle
+  val block: TextBlockRectangle
+)
+
+data class TextBlockRectangle(
+  val x: Int,
+  val y: Int,
+  val w: Int,
+  val h: Int
 )
 
 enum class OCRLanguage(

@@ -31,7 +31,7 @@ class LocalTesseract(
       val rect = result[i]
       val text = instance.doOCR(image, rect)
       //ans.add(BoxWithText(text.replace("\n", ""), rect))
-      ans.add(TextBlock(text, rect))
+      ans.add(TextBlock(text, TextBlockRectangle(rect.x, rect.y, rect.width, rect.height)))
     }
     return ans
   }

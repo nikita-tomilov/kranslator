@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.programmer74.kranslator.api.feign.LibreTranslateFeignApi
 import com.programmer74.kranslator.api.feign.LibreTranslateRequest
-import com.programmer74.kranslator.api.translate.Translator
-import com.programmer74.kranslator.api.translate.TranslatorLanguage
+import com.programmer74.kranslator.translate.Translator
+import com.programmer74.kranslator.translate.TranslatorLanguage
 import feign.Feign
 import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
