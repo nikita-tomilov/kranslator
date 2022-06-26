@@ -1,4 +1,4 @@
-package com.programmer74.kranslator.api.ocr
+package com.programmer74.kranslator.ocr
 
 import java.awt.Rectangle
 import java.io.File

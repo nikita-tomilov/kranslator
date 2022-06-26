@@ -3,8 +3,8 @@ package com.programmer74.kranslator.service
 import com.lowagie.text.Document
 import com.lowagie.text.RectangleReadOnly
 import com.lowagie.text.pdf.PdfWriter
-import com.programmer74.kranslator.service.ocr.LocalTesseract
-import com.programmer74.kranslator.api.ocr.OCRLanguage
+import com.programmer74.kranslator.ocr.LocalTesseract
+import com.programmer74.kranslator.ocr.OCRLanguage
 import com.programmer74.kranslator.service.translation.LibreTranslate
 import com.programmer74.kranslator.api.translate.TranslatorLanguage
 import mu.KLogging

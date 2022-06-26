@@ -1,6 +1,5 @@
-package com.programmer74.kranslator.service.ocr
+package com.programmer74.kranslator.ocr
 
-import com.programmer74.kranslator.api.ocr.OCRLanguage
 import mu.KLogging
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.util.Files
