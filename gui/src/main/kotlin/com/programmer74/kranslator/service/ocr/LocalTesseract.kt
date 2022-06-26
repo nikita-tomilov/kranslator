@@ -1,5 +1,8 @@
 package com.programmer74.kranslator.service.ocr
 
+import com.programmer74.kranslator.api.ocr.CharacterRecognizer
+import com.programmer74.kranslator.api.ocr.OCRLanguage
+import com.programmer74.kranslator.api.ocr.TextBlock
 import com.programmer74.kranslator.service.PDFConverter
 import net.sourceforge.tess4j.ITessAPI
 import net.sourceforge.tess4j.Tesseract
