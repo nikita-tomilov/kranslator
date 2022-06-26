@@ -9,21 +9,29 @@ import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 
 class LibreTranslate(
-    private val target: String = "https://libretranslate.com/translate"
+  private val target: String = "https://libretranslate.de"
 ) : Translator {
 
-    private val om = ObjectMapper().registerKotlinModule()
+  private val om = ObjectMapper().registerKotlinModule()
 
-    private val api = Feign.builder()
-        .encoder(JacksonEncoder(om))
-        .decoder(JacksonDecoder(om))
-        .target(LibreTranslateFeignApi::class.java, target)
+  private val api = Feign.builder()
+      .encoder(JacksonEncoder(om))
+      .decoder(JacksonDecoder(om))
+      .target(LibreTranslateFeignApi::class.java, target)
 
-    override fun availableLanguages(): Set<TranslatorLanguage> {
-        return setOf(TranslatorLanguage.DE, TranslatorLanguage.EN_US)
-    }
+  override fun availableLanguages(): Set<TranslatorLanguage> {
+    return setOf(TranslatorLanguage.DE, TranslatorLanguage.EN_US)
+  }
 
-    override fun translate(text: String, source: TranslatorLanguage, target: TranslatorLanguage): String {
-        return api.translate(LibreTranslateRequest(text, source.twoLetterCode, target.twoLetterCode)).translatedText
-    }
+  override fun translate(
+    text: String,
+    source: TranslatorLanguage,
+    target: TranslatorLanguage
+  ): String {
+    return api.translate(
+        LibreTranslateRequest(
+            text,
+            source.twoLetterCode,
+            target.twoLetterCode)).translatedText
+  }
 }

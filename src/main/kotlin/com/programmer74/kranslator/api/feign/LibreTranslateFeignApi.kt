@@ -6,18 +6,18 @@ import feign.RequestLine
 
 interface LibreTranslateFeignApi {
 
-    @RequestLine("POST /translate")
-    @Headers("Content-Type: application/json")
-    fun translate(request: LibreTranslateRequest): LibreTranslateResponse
+  @RequestLine("POST /translate")
+  @Headers("Content-Type: application/json")
+  fun translate(request: LibreTranslateRequest): LibreTranslateResponse
 }
 
 data class LibreTranslateRequest(
-    val q: String,
-    val source: String,
-    val target: String
+  val q: String,
+  val source: String,
+  val target: String
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class LibreTranslateResponse(
-    val translatedText: String
+  val translatedText: String
 )

@@ -5,13 +5,13 @@ import org.junit.jupiter.api.Test
 
 class LibreTranslateTest {
 
-    private val translator = LibreTranslate("http://localhost:5000")
+  private val translator = LibreTranslate()
 
-    @Test
-    fun hello() {
-        //given/when
-        val answer = translator.translate("hello", TranslatorLanguage.EN_US, TranslatorLanguage.DE)
-        //then
-        assertThat(answer).isEqualTo("hallo")
-    }
+  @Test
+  fun hello() {
+    //given/when
+    val answer = translator.translate("hello", TranslatorLanguage.EN_US, TranslatorLanguage.DE)
+    //then
+    assertThat(answer.toLowerCase()).isEqualTo("hallo")
+  }
 }

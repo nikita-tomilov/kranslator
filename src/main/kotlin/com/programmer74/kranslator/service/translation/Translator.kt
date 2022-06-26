@@ -2,13 +2,13 @@ package com.programmer74.kranslator.service.translation
 
 interface Translator {
 
-    fun availableLanguages(): Set<TranslatorLanguage>
+  fun availableLanguages(): Set<TranslatorLanguage>
 
-    fun translate(text: String, source: TranslatorLanguage, target: TranslatorLanguage): String
+  fun translate(text: String, source: TranslatorLanguage, target: TranslatorLanguage): String
 }
 
 enum class TranslatorLanguage(
-    val twoLetterCode: String
+  val twoLetterCode: String
 ) {
-    EN_US("en"), EN_GB("en"), DE("de"), RU("ru")
+  EN_US("en"), EN_GB("en"), DE("de"), RU("ru")
 }
