@@ -18,8 +18,8 @@
         <javafx.mvn.version>0.0.8</javafx.mvn.version>
         <tornadofx.version>1.7.20</tornadofx.version>
         <target.jvm.version>17</target.jvm.version>
-        <main.package>com.paekva.amdfrontend</main.package>
-        <main.class>com.paekva.amdfrontend.Application</main.class>
+        <main.package>com.programmer74.kranslator</main.package>
+        <main.class>${main.package}.Application</main.class>
         <jarfile.prefix>${artifactId}-${version}</jarfile.prefix>
     </properties>
 
@@ -80,6 +80,10 @@
         </dependency>
         <!-- feign -->
         <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-reflect</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-okhttp</artifactId>
         </dependency>
@@ -103,47 +107,6 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <configuration>
-                    <source>${target.jvm.version}</source>
-                    <target>${target.jvm.version}</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-maven-plugin</artifactId>
-                <version>${kotlin.version}</version>
-                <executions>
-                    <execution>
-                        <id>compile</id>
-                        <phase>process-sources</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>test-compile</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>test-compile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <jvmTarget>${target.jvm.version}</jvmTarget>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.2</version>
-            </plugin>
-            <plugin>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.22.2</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.6</version>
                 <executions>
@@ -163,7 +126,7 @@
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
                             <appendAssemblyId>false</appendAssemblyId>
-                            <finalName>${jarfile.prefix}-fatjar</finalName>
+                            <finalName>${jarfile.prefix}-executable</finalName>
                         </configuration>
                     </execution>
                 </executions>
@@ -184,9 +147,9 @@
                             <compress>2</compress>
                             <noHeaderFiles>true</noHeaderFiles>
                             <noManPages>true</noManPages>
-                            <launcher>amdfrontend</launcher>
-                            <jlinkImageName>amdfrontend</jlinkImageName>
-                            <jlinkZipName>amdfrontend</jlinkZipName>
+                            <launcher>kranslator</launcher>
+                            <jlinkImageName>kranslator</jlinkImageName>
+                            <jlinkZipName>kranslator</jlinkZipName>
                         </configuration>
                     </execution>
                 </executions>

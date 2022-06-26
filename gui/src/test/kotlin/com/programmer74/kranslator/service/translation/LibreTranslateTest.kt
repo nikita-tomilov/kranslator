@@ -13,6 +13,6 @@ class LibreTranslateTest {
     //given/when
     val answer = translator.translate("hello", TranslatorLanguage.EN_US, TranslatorLanguage.DE)
     //then
-    assertThat(answer.toLowerCase()).isEqualTo("hallo")
+    assertThat(answer.lowercase()).isEqualTo("hallo")
   }
 }

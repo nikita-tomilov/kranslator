@@ -1,8 +1,13 @@
 package com.programmer74.kranslator.view
 
+import com.programmer74.kranslator.service.translation.LibreTranslate
+import com.programmer74.kranslator.translate.Translator
 import tornadofx.*
+import kotlin.system.exitProcess
 
 class MainView : Fragment("Translator") {
+
+  private val translatorInstance: Translator = LibreTranslate()
 
   override val root = form {
 
@@ -13,7 +18,10 @@ class MainView : Fragment("Translator") {
     tabpane {
       tab("Text") {
         isClosable = false
-        label("TBD")
+        val plainTextTranslateView = find<PlainTextTranslateView>(
+            mapOf(PlainTextTranslateView::translatorInstance to translatorInstance)
+        )
+        add(plainTextTranslateView)
       }
       tab("Image") {
         isClosable = false
@@ -21,5 +29,7 @@ class MainView : Fragment("Translator") {
       }
       prefHeightProperty().bind(heightProp)
     }
+
+    primaryStage.setOnCloseRequest { exitProcess(0) }
   }
 }
