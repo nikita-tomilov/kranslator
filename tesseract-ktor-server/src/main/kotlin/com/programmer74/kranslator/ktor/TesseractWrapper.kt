@@ -8,22 +8,16 @@ object TesseractWrapper {
   private val INSTANCE = LocalTesseract()
 
   fun doOCR(
-    file: File,
-    languageParam: String,
-    dpiParam: String,
-    pilParam: String
+    file: File, languageParam: String, dpiParam: String, pilParam: String
   ): TesseractResult {
     val language = OCRLanguage.valueOf(languageParam.uppercase())
     val dpi = dpiParam.toInt()
     val pil = pilParam.toInt()
     val result = INSTANCE.recognize(file, dpi, language, pil)
-    return TesseractResult(result.map {
+    return TesseractResult(result.blocks.map {
       TesseractResultBlock(
-          it.text,
-          it.block.x,
-          it.block.y,
-          it.block.w,
-          it.block.h)
+          it.text, TesseractResultRect(
+          it.block.x, it.block.y, it.block.w, it.block.h))
     })
   }
 }

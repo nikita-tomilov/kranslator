@@ -17,12 +17,12 @@ class LocalTesseract(
     dpi: Int,
     language: OCRLanguage,
     pil: Int
-  ): List<TextBlock> {
+  ): TextBlocks {
     val instance = Tesseract()
     instance.setDatapath(File(dataPath).path)
     instance.setLanguage(language.threeLetterCode)
     instance.setTessVariable("user_defined_dpi", dpi.toString())
-    return parsePage(instance, imageFile, pil)
+    return TextBlocks(parsePage(instance, imageFile, pil))
   }
 
   private fun parsePage(instance: Tesseract, image: File, pil: Int): List<TextBlock> {
