@@ -13,4 +13,5 @@ open module kranslator.gui {
   requires com.fasterxml.jackson.kotlin;
   requires kranslator.api;
   requires feign.form;
+  requires javafx.swing;
 }

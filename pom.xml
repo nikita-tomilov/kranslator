@@ -135,6 +135,11 @@
                 <artifactId>javafx-fxml</artifactId>
                 <version>${javafx.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-swing</artifactId>
+                <version>${javafx.version}</version>
+            </dependency>
             <!-- javafx graphics module without classifier -->
             <dependency>
                 <groupId>org.openjfx</groupId>
