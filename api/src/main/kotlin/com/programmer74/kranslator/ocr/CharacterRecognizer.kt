@@ -3,7 +3,7 @@ package com.programmer74.kranslator.ocr
 import java.io.File
 
 interface CharacterRecognizer {
-  fun recognize(imageFile: File, language: OCRLanguage): List<TextBlock>
+  fun recognize(imageFile: File, dpi: Int, language: OCRLanguage, pil: Int): List<TextBlock>
 }
 
 data class TextBlock(

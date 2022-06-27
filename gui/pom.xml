@@ -14,10 +14,6 @@
     </parent>
 
     <properties>
-        <javafx.version>17.0.2</javafx.version>
-        <javafx.mvn.version>0.0.8</javafx.mvn.version>
-        <tornadofx.version>1.7.20</tornadofx.version>
-        <target.jvm.version>17</target.jvm.version>
         <main.package>com.programmer74.kranslator</main.package>
         <main.class>${main.package}.Application</main.class>
         <jarfile.prefix>${artifactId}-${version}</jarfile.prefix>
@@ -30,11 +26,6 @@
             <artifactId>kranslator-api</artifactId>
             <version>${project.version}</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.programmer74</groupId>-->
-<!--            <artifactId>kranslator-tesseract-local</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
         <!-- businesslogic -->
         <dependency>
             <groupId>com.github.librepdf</groupId>
@@ -43,40 +34,33 @@
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
-            <version>2.0.26</version>
         </dependency>
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox-tools</artifactId>
-            <version>2.0.26</version>
         </dependency>
         <!-- javafx -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-base</artifactId>
-            <version>${javafx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>${javafx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>${javafx.version}</version>
         </dependency>
         <!-- javafx graphics module without classifier -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
-            <version>${javafx.version}</version>
         </dependency>
         <!-- tornadofx -->
         <dependency>
             <groupId>no.tornado</groupId>
             <artifactId>tornadofx</artifactId>
-            <version>${tornadofx.version}</version>
         </dependency>
         <!-- feign -->
         <dependency>

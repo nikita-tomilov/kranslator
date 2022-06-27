@@ -1,6 +1,7 @@
 package com.programmer74.kranslator.ocr
 
 import mu.KLogging
+import net.sourceforge.tess4j.ITessAPI
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.util.Files
 import org.junit.jupiter.api.Test
@@ -18,7 +19,11 @@ class LocalTesseractTest {
     val img = testPicture()
     logger.info { img }
     //when
-    val parsed = LocalTesseract().recognize(img, OCRLanguage.EN)
+    val parsed = LocalTesseract().recognize(
+        img,
+        600,
+        OCRLanguage.EN,
+        ITessAPI.TessPageIteratorLevel.RIL_PARA)
     //then
     assertThat(parsed.single().text.trim()).isEqualTo("Hello")
   }
