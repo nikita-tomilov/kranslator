@@ -24,7 +24,7 @@ object Main : KLogging() {
   /*
     curl -v --header 'X-MAGIC: TSX5w24M9bxjPHu6Tf9VrKr5' \
       --header 'Accept: application/json' -F 'data=@/home/hotaro/test.png' \
-      http://127.0.0.1:8080/image/300/deu/1/ocr
+      http://127.0.0.1:8080/image/300/de/1/ocr
   */
   @JvmStatic
   fun main(args: Array<String>) {

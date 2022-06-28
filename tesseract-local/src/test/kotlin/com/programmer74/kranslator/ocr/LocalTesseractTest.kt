@@ -28,6 +28,21 @@ class LocalTesseractTest {
     assertThat(parsed.blocks.single().text.trim()).isEqualTo("Hello")
   }
 
+  @Test
+  fun speedAndAccuracyTest() {
+    //given
+    val img = File("/opt/test.png")
+    logger.info { img }
+    //when
+    val parsed = LocalTesseract().recognize(
+      img,
+      0,
+      OCRLanguage.DE,
+      ITessAPI.TessPageIteratorLevel.RIL_PARA)
+    //then
+    parsed.blocks.forEach { logger.info { it.text } }
+  }
+
   private fun testPicture(): File {
     val file = File(Files.newTemporaryFile().absolutePath + ".png")
     val image = BufferedImage(200, 20, BufferedImage.TYPE_INT_RGB)
