@@ -8,8 +8,9 @@ import javafx.beans.property.SimpleStringProperty
 import javafx.embed.swing.SwingFXUtils
 import javafx.geometry.Orientation
 import javafx.scene.control.ProgressIndicator
-import javafx.scene.control.ToggleGroup
 import javafx.scene.image.Image
+import javafx.scene.input.KeyCode
+import javafx.scene.input.KeyEvent.KEY_PRESSED
 import tornadofx.*
 import java.awt.image.BufferedImage
 import java.util.concurrent.atomic.AtomicBoolean
@@ -17,29 +18,28 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.system.exitProcess
 
 class MainView : Fragment("Translator") {
-  enum class Mode {
-    TEXT, IMAGE, PDF
-  }
 
   private val controller = MainController()
   private val languages = controller.languages()
   private val fromLanguage = SimpleObjectProperty(TranslatorLanguage.DE)
   private val toLanguage = SimpleObjectProperty(TranslatorLanguage.EN_US)
-  private val originalText = SimpleStringProperty("hello")
+  private val originalText = SimpleStringProperty("")
   private val originalImage = AtomicReference<BufferedImage>(null)
   private val originalImageSwing = SimpleObjectProperty<Image>()
   private val imageOCRPerformed = AtomicBoolean(false)
-  private val resultText = SimpleStringProperty("hallo")
+  private val resultText = SimpleStringProperty("")
   private val actionInProgress = SimpleBooleanProperty(false)
-  private val textBoxesVisible = SimpleBooleanProperty(true)
-  private val imageBoxesVisible = SimpleBooleanProperty(false)
-  private val mode = SimpleObjectProperty(Mode.TEXT)
 
-  private fun translateAction(requests: List<TranslatorRequest> = emptyList()) {
-    if (mode.get() == Mode.PDF) return
+  private fun translateAction() {
     actionInProgress.set(true)
 
-    if (requests.isNotEmpty()) {
+    if (originalText.get().isNotEmpty()) {
+      val requests =
+          listOf(
+              TranslatorRequest(
+                  originalText.get(),
+                  fromLanguage.get(),
+                  toLanguage.get()))
       controller.translate(requests) {
         actionInProgress.set(false)
         resultText.set(it.joinToString("\n"))
@@ -47,29 +47,18 @@ class MainView : Fragment("Translator") {
       return
     }
 
-    if ((mode.get() == Mode.IMAGE) && (originalImage.get() != null)) {
-      if (!imageOCRPerformed.get()) {
-        log.warning { "OCR not performed" }
-        actionInProgress.set(true)
-        controller.ocr(originalImage.get(), fromLanguage.get()) { res ->
-          originalText.set(res.joinToString("\n") { it.text })
-          imageOCRPerformed.set(true)
-          translateAction(res.map {
-            TranslatorRequest(it.text, fromLanguage.get(), toLanguage.get())
-          })
-        }
-        return
-      } else {
-        log.warning { "OCR already performed, skipping..." }
+    if (originalImage.get() != null) {
+      actionInProgress.set(true)
+      controller.ocr(originalImage.get(), fromLanguage.get()) { res ->
+        originalText.set(res.joinToString("\n") { it.text })
+        imageOCRPerformed.set(true)
+        translateAction()
       }
+      return
     }
 
-    translateAction(
-        listOf(
-            TranslatorRequest(
-                originalText.get(),
-                fromLanguage.get(),
-                toLanguage.get())))
+    resultText.set("Nothing to translate")
+    actionInProgress.set(false)
   }
 
   private fun insertImageAction() {
@@ -88,38 +77,10 @@ class MainView : Fragment("Translator") {
     })
   }
 
-  private fun modeChanged(newMode: Mode) {
-    mode.set(newMode)
-    log.warning { "mode changed to $newMode" }
-    when (newMode) {
-      Mode.TEXT -> {
-        textBoxesVisible.set(true)
-        imageBoxesVisible.set(false)
-      }
-      Mode.IMAGE -> {
-        textBoxesVisible.set(true)
-        imageBoxesVisible.set(true)
-      }
-      Mode.PDF -> {
-        textBoxesVisible.set(false)
-        imageBoxesVisible.set(false)
-      }
-    }
-  }
-
   override val root = form {
     prefWidth = 1280.0
     prefHeight = 720.0
     val rootHeight = this.heightProperty()
-    val toggleGroup = ToggleGroup()
-
-    hbox {
-      Mode.values().forEach { m ->
-        val toggle = togglebutton(m.name, toggleGroup)
-        toggle.setOnAction { modeChanged(m) }
-        this.add(toggle)
-      }
-    }
 
     hbox {
       label("From")
@@ -129,12 +90,6 @@ class MainView : Fragment("Translator") {
       label("To")
       combobox(property = toLanguage, values = languages) {
         disableProperty().bind(actionInProgress)
-      }
-      button("Insert image") {
-        action {
-          insertImageAction()
-        }
-        visibleProperty().bind(imageBoxesVisible)
       }
       button("Translate") {
         action {
@@ -150,6 +105,14 @@ class MainView : Fragment("Translator") {
       splitpane {
         textarea(originalText) {
           disableProperty().bind(actionInProgress)
+          addEventHandler(KEY_PRESSED) { event ->
+            if (event.isControlDown && event.code === KeyCode.V) {
+              if (clipboard.hasImage()) {
+                event.consume()
+                insertImageAction()
+              }
+            }
+          }
         }
         textarea(resultText) {
           disableProperty().bind(actionInProgress)
@@ -158,14 +121,12 @@ class MainView : Fragment("Translator") {
         orientation = Orientation.HORIZONTAL
         setDividerPositions(0.5)
         prefHeightProperty().bind(rootHeight)
-        visibleProperty().bind(textBoxesVisible)
       }
       splitpane {
         hbox {
           imageview { imageProperty().bind(originalImageSwing) }
         }
         prefHeightProperty().bind(rootHeight)
-        visibleProperty().bind(imageBoxesVisible)
       }
       prefHeightProperty().bind(rootHeight)
     }
