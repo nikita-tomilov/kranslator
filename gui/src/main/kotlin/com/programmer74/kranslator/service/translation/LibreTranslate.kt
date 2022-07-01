@@ -6,6 +6,7 @@ import com.programmer74.kranslator.api.feign.LibreTranslateFeignApi
 import com.programmer74.kranslator.api.feign.LibreTranslateRequest
 import com.programmer74.kranslator.translate.Translator
 import com.programmer74.kranslator.translate.TranslatorLanguage
+import com.programmer74.kranslator.translate.TranslatorRequest
 import feign.Feign
 import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
@@ -26,18 +27,14 @@ class LibreTranslate(
     return setOf(TranslatorLanguage.DE, TranslatorLanguage.EN_US, TranslatorLanguage.RU)
   }
 
-  override fun translate(
-    text: String,
-    source: TranslatorLanguage,
-    target: TranslatorLanguage
-  ): String {
-    if (text.length < characterLimit) {
-      return invokeTranslate(text, source, target)
+  override fun translate(request: TranslatorRequest): String {
+    if (request.text.length < characterLimit) {
+      return invokeTranslate(request.text, request.source, request.target)
     }
-    return text.split(" ")
+    return request.text.split(" ")
         .chunkedBy(characterLimit) { length + 1 }.joinToString(" ") {
           val lineOfWordsWithinLimit = it.joinToString(" ")
-          invokeTranslate(lineOfWordsWithinLimit, source, target)
+          invokeTranslate(lineOfWordsWithinLimit, request.source, request.target)
         }
   }
 

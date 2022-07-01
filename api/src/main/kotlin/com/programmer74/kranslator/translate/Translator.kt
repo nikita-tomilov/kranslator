@@ -4,7 +4,7 @@ interface Translator {
 
   fun availableLanguages(): Set<TranslatorLanguage>
 
-  fun translate(text: String, source: TranslatorLanguage, target: TranslatorLanguage): String
+  fun translate(request: TranslatorRequest): String
 }
 
 enum class TranslatorLanguage(
@@ -12,3 +12,9 @@ enum class TranslatorLanguage(
 ) {
   EN_US("en"), EN_GB("en"), DE("de"), RU("ru")
 }
+
+data class TranslatorRequest(
+  val text: String,
+  val source: TranslatorLanguage,
+  val target: TranslatorLanguage
+)
