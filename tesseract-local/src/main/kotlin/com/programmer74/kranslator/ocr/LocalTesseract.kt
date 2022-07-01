@@ -29,24 +29,7 @@ class LocalTesseract(
     language: OCRLanguage,
     pil: Int
   ): TextBlocks {
-    val instance = Tesseract()
-    instance.setDatapath(File(dataPath).path)
-    instance.setLanguage(language.threeLetterCode)
-    instance.setTessVariable("user_defined_dpi", dpi.toString())
-    val scaledImage = Thumbnails
-      .of(imageFile)
-      .scale(2.0)
-      .asBufferedImage()
-    val sharpenKernel = Kernel(
-      3, 3, floatArrayOf(
-        0f, -1f, 0f, -1f, 5f, -1f, 0f,
-        -1f, 0f
-      )
-    )
-    val sharpenOp: BufferedImageOp = ConvolveOp(sharpenKernel)
-    val sharpenedImage = sharpenOp.filter(scaledImage, null)
-    //ImageIO.write(sharpenedImage, "png", File(imageFile.absolutePath + "-2.png"))
-    return TextBlocks(parsePage(dpi, language, sharpenedImage, pil))
+    return TextBlocks(parsePage(dpi, language, ImageIO.read(imageFile), pil))
   }
 
   private fun parsePage(dpi: Int, language: OCRLanguage, image: BufferedImage, pil: Int): List<TextBlock> {
