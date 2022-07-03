@@ -11,8 +11,10 @@ import javafx.scene.control.ScrollPane
 import javafx.scene.image.Image
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyEvent.KEY_PRESSED
+import mu.KLogging
 import tornadofx.*
 import java.awt.image.BufferedImage
+import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.system.exitProcess
 
@@ -32,55 +34,88 @@ class MainView : Fragment("Translator") {
   private val resultImageSwing = SimpleObjectProperty<Image>()
   private lateinit var resultImageViewPane: ScrollPane
   private val actionInProgress = SimpleBooleanProperty(false)
+  private val logString = SimpleStringProperty("")
+  private fun translateOCRedImageAction() {
+    val requests =
+        imageOCRResults.get().map {
+          TranslatorRequest(
+              it.text,
+              fromLanguage.get(),
+              toLanguage.get())
+        }
+    controller.translate(requests) {
+      resultText.set(it.joinToString("\n"))
+      controller.imprintTranslateResponseToImage(
+          originalImage.get(),
+          imageOCRResults.get(),
+          it) { img ->
+        resultImageSwing.set(SwingFXUtils.toFXImage(img, null))
+        resultImageViewPane.prefHeightProperty().unbind()
+        resultImageViewPane.prefHeightProperty().bind(rootHeight)
+        actionInProgress.set(false)
+        imageOCRResults.set(null)
+      }
+    }
+  }
+
+  private fun translateTextAction() {
+    val requests =
+        listOf(
+            TranslatorRequest(
+                originalText.get(),
+                fromLanguage.get(),
+                toLanguage.get()))
+    controller.translate(requests) {
+      actionInProgress.set(false)
+      resultText.set(it.joinToString("\n"))
+    }
+  }
+
+  private fun translatePDFAction(f: File) {
+    originalText.set("")
+    resultText.set("")
+    controller.translate(
+        f,
+        fromLanguage.get(),
+        toLanguage.get(),
+        { logString.set(it) },
+        { ob -> originalText.set(originalText.get() + ob.joinToString("\n") { it.text } + "\n") },
+        { tb -> resultText.set(resultText.get() + tb.joinToString("\n") + "\n")},
+        {
+          logString.set("")
+          actionInProgress.set(false)
+          logger.warn { it }
+          resultText.set("Please see ${it.absolutePath}")
+        }
+    )
+  }
+
+  private fun ocrImageAction() {
+    actionInProgress.set(true)
+    controller.ocr(originalImage.get(), fromLanguage.get()) { res ->
+      originalText.set(res.joinToString("\n") { it.text })
+      imageOCRResults.set(res)
+      translateAction()
+    }
+  }
 
   private fun translateAction() {
     actionInProgress.set(true)
 
     if (imageOCRResults.get() != null) {
-      val requests =
-          imageOCRResults.get().map {
-            TranslatorRequest(
-                it.text,
-                fromLanguage.get(),
-                toLanguage.get())
-          }
-      controller.translate(requests) {
-        resultText.set(it.joinToString("\n"))
-        controller.imprintTranslateResponseToImage(
-            originalImage.get(),
-            imageOCRResults.get(),
-            it) { img ->
-          resultImageSwing.set(SwingFXUtils.toFXImage(img, null))
-          resultImageViewPane.prefHeightProperty().unbind()
-          resultImageViewPane.prefHeightProperty().bind(rootHeight)
-          actionInProgress.set(false)
-          imageOCRResults.set(null)
-        }
-      }
+      return translateOCRedImageAction()
+    }
+
+    if (isFile(originalText.get())) {
+      return translatePDFAction(normalizeFile(originalText.get()))
     }
 
     if (originalText.get().isNotEmpty()) {
-      val requests =
-          listOf(
-              TranslatorRequest(
-                  originalText.get(),
-                  fromLanguage.get(),
-                  toLanguage.get()))
-      controller.translate(requests) {
-        actionInProgress.set(false)
-        resultText.set(it.joinToString("\n"))
-      }
-      return
+      return translateTextAction()
     }
 
     if (originalImage.get() != null) {
-      actionInProgress.set(true)
-      controller.ocr(originalImage.get(), fromLanguage.get()) { res ->
-        originalText.set(res.joinToString("\n") { it.text })
-        imageOCRResults.set(res)
-        translateAction()
-      }
-      return
+      return ocrImageAction()
     }
 
     resultText.set("Nothing to translate")
@@ -113,6 +148,28 @@ class MainView : Fragment("Translator") {
     resultImageViewPane.prefHeightProperty().bind(SimpleDoubleProperty(0.0))
   }
 
+  private fun isFile(s: String): Boolean {
+    try {
+      val f = File(s)
+      if (f.exists() && (f.extension.lowercase() == "pdf")) {
+        return true
+      }
+    } catch (e: Exception) {
+
+    }
+    if (s.startsWith("file://")) return isFile(s.replace("file://", ""))
+    return false
+  }
+
+  private fun normalizeFile(s: String): File {
+    var path = s
+    if (path.startsWith("file://")) path = path.replaceFirst("file://", "")
+    if (System.getProperty ("os.name").lowercase().contains("windows")) {
+      if (path.startsWith("/")) path = path.replaceFirst("/", "")
+    }
+    return File(path)
+  }
+
   override val root = form {
     prefWidth = 1280.0
     prefHeight = 720.0
@@ -134,6 +191,10 @@ class MainView : Fragment("Translator") {
       }
       progressbar(ProgressIndicator.INDETERMINATE_PROGRESS) {
         visibleProperty().bind(actionInProgress)
+      }
+      label {
+        visibleProperty().bind(actionInProgress)
+        textProperty().bind(logString)
       }
     }
 
@@ -181,4 +242,6 @@ class MainView : Fragment("Translator") {
     clearImageAction()
     primaryStage.setOnCloseRequest { exitProcess(0) }
   }
+
+  companion object : KLogging()
 }

@@ -14,4 +14,7 @@ open module kranslator.gui {
   requires kranslator.api;
   requires feign.form;
   requires javafx.swing;
+  requires org.apache.pdfbox;
+  requires org.apache.pdfbox.tools;
+  requires com.github.librepdf.openpdf;
 }
