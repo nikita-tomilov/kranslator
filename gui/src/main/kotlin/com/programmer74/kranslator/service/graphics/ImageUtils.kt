@@ -1,8 +1,9 @@
 package com.programmer74.kranslator.service.graphics
 
-import java.awt.Graphics
-import java.awt.Image
-import java.awt.Toolkit
+import com.programmer74.kranslator.ocr.TextBlock
+import com.programmer74.kranslator.ocr.TextBlockRectangle
+import com.programmer74.kranslator.view.MainController
+import java.awt.*
 import java.awt.datatransfer.Clipboard
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.Transferable
@@ -28,6 +29,91 @@ object ImageUtils {
       g.dispose()
     }
     return result
+  }
+
+  fun imprintTranslateResponseToImage(
+    target: BufferedImage,
+    ocrBlocks: List<TextBlock>,
+    translatedTexts: List<String>
+  ): BufferedImage {
+    val g = target.createGraphics()
+    assert(ocrBlocks.size == translatedTexts.size)
+    (ocrBlocks.indices).forEach { i ->
+      val block = ocrBlocks[i].block
+      val text = translatedTexts[i]
+      renderTextBlock(text, block, g)
+    }
+    return target
+  }
+
+
+  private fun renderTextBlock(text: String, block: TextBlockRectangle, g: Graphics2D) {
+    g.color = Color.WHITE
+    g.fillRect(block.x, block.y, block.w, block.h)
+
+    val origStroke = g.stroke
+    g.color = Color.RED
+    g.stroke = BasicStroke(1.0f)
+    g.drawRect(block.x, block.y, block.w, block.h)
+
+    g.color = Color.BLACK
+    g.stroke = origStroke
+    drawTextToFit(text, g, block)
+  }
+
+  //https://stackoverflow.com/questions/12485236/finding-maximum-font-size-to-fit-in-region-java
+  private fun drawTextToFit(text: String, g: Graphics2D, maxRect: TextBlockRectangle) {
+    val lines = text.split("\n")
+    val linesCount = lines.count()
+
+    val lineHeight = maxRect.h / linesCount
+    val lineWidth = maxRect.w
+
+    val longestLine = lines.maxByOrNull { it.length } ?: lines.first()
+
+    g.font = Font("TimesRoman", Font.PLAIN, 16)
+    g.setRenderingHint(
+        RenderingHints.KEY_TEXT_ANTIALIASING,
+        RenderingHints.VALUE_TEXT_ANTIALIAS_ON
+    )
+    MainController.logger.info { "drawing text block of size ${text.length} to ${maxRect.x};${maxRect.y}" }
+
+    val maxFontSize = getMaxFittingFontSize(g, g.font, longestLine, lineWidth, lineHeight)
+    MainController.logger.info { "drawing text of size ${text.length} to ${maxRect.x};${maxRect.y};${maxRect.w};${maxRect.h}; computed size: $maxFontSize" }
+
+    g.font = Font("TimesRoman", Font.PLAIN, maxFontSize)
+
+    val x = maxRect.x + 3
+    var y = maxRect.y - 3 + g.fontMetrics.height
+    lines.forEach { line ->
+      g.drawString(line, x, y)
+      y += g.fontMetrics.height
+    }
+  }
+
+  private fun getMaxFittingFontSize(
+    g: Graphics,
+    font: Font,
+    string: String?,
+    width: Int,
+    height: Int
+  ): Int {
+    var minSize = 6
+    var maxSize = 72
+    var curSize = font.size
+    while (maxSize - minSize > 2) {
+      val fm = g.getFontMetrics(Font(font.name, font.style, curSize))
+      val fontWidth = fm.stringWidth(string)
+      val fontHeight = fm.leading + fm.maxAscent + fm.maxDescent
+      if ((fontWidth > width) || (fontHeight > height)) {
+        maxSize = curSize
+        curSize = (maxSize + minSize) / 2
+      } else {
+        minSize = curSize
+        curSize = (minSize + maxSize) / 2
+      }
+    }
+    return curSize
   }
 
   private fun pasteFromClipboard(flavor: DataFlavor?): Any? {
