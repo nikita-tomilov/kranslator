@@ -38,12 +38,18 @@ class PDFStripper(
   }
 
   override fun writeString(text: String, textPositions: MutableList<TextPosition>) {
-    val bounds = MappedBounds.from(
-        textPositions,
-        { it.x / it.pageWidth },
-        { (it.y - it.height) / it.pageHeight },
-        { it.width / it.pageWidth },
-        { it.height / it.pageHeight })
+        val bounds = MappedBounds.from(
+            textPositions,
+            { it.x / it.pageWidth },
+            { (it.y - it.height) / it.pageHeight },
+            { it.width / it.pageWidth },
+            { it.height / it.pageHeight })
+//    val bounds = MappedBounds.from(
+//        textPositions,
+//        { it.x },
+//        { it.height - it.y },
+//        { it.width },
+//        { it.height })
     callback(MappedLine(pageCounter.get(), paragraphCounter.get(), text, bounds))
   }
 

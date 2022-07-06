@@ -17,7 +17,7 @@ object PDFParser : KLogging() {
       val linesForPage = e.value
       val page = linesForPage.first().page
       val paragraphText =
-          linesForPage.filter { it.line.isNotBlank() }.joinToString("\n") { it.line }
+          linesForPage.filter { it.line.isNotBlank() }.joinToString("") { it.line }
       val paragraphBounds = MappedBounds.from(linesForPage.map { it.bounds })
       MappedParagraph(page, paragraphIndex, paragraphText, paragraphBounds)
     }
