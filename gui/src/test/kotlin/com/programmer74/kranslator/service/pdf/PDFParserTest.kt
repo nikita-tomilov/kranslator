@@ -7,15 +7,15 @@ import com.lowagie.text.pdf.BaseFont
 import com.lowagie.text.pdf.ColumnText
 import com.lowagie.text.pdf.PdfContentByte
 import com.lowagie.text.pdf.PdfWriter
-import com.programmer74.kranslator.ocr.TextBlock
-import com.programmer74.kranslator.ocr.TextBlockRectangle
 import com.programmer74.kranslator.service.graphics.ImageUtils
+import com.programmer74.kranslator.service.graphics.SimpleBoundary
+import com.programmer74.kranslator.service.pdf.PDFParser.extractLines
+import com.programmer74.kranslator.service.pdf.PDFParser.extractParagraphs
 import mu.KLogging
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.io.FileOutputStream
-import java.nio.file.Files
 import javax.imageio.ImageIO
 
 class PDFParserTest {
@@ -32,11 +32,46 @@ class PDFParserTest {
 
   @Test
   @Disabled
-  fun dummy2() {
+  fun linesCoordinatesDemo() {
     val ud = System.getProperty("user.dir")
     val file = File("$ud/src/test/resources/testpdf-saveaspdf.pdf")
     //val file = File("$ud/src/test/resources/testpdf-printedscanned.pdf")
-    val paragraphs = PDFParser.extractParagraphs(file)
+    val lines = extractLines(file)
+    val pagesPNG = PDFConverter.convertPDFToImages(file)
+
+    val reprintedPagesPNG = pagesPNG.mapIndexed { index, pagePNG ->
+      val page = index + 1
+      val linesForPage = lines.filter { it.page == page }
+      logger.warn { "for page $page got ${linesForPage.size} lines" }
+
+      val originalImage = ImageIO.read(pagePNG)
+      val reprintedPagePNG = File("$page-lines.PNG")
+      val aw = originalImage.width // * 1.1
+      val ah = originalImage.height // * 1.1
+      val imprintedImage =
+          ImageUtils.imprintBoundariesToImage(
+              originalImage,
+              linesForPage.map {
+                SimpleBoundary(
+                        (it.bounds.llx * aw).toInt(),
+                        (it.bounds.lly * ah).toInt(),
+                        (it.bounds.urx * aw).toInt(),
+                        (it.bounds.ury * ah).toInt())
+              })
+      ImageIO.write(imprintedImage, "PNG", reprintedPagePNG)
+      reprintedPagePNG
+    }
+
+    reprintedPagesPNG.forEach { logger.warn { it.absolutePath } }
+  }
+
+  @Test
+  @Disabled
+  fun paragraphCoordinatesDemo() {
+    val ud = System.getProperty("user.dir")
+    val file = File("$ud/src/test/resources/testpdf-saveaspdf.pdf")
+    //val file = File("$ud/src/test/resources/testpdf-printedscanned.pdf")
+    val paragraphs = extractParagraphs(file)
     val pagesPNG = PDFConverter.convertPDFToImages(file)
 
     val reprintedPagesPNG = pagesPNG.mapIndexed { index, pagePNG ->
@@ -45,28 +80,26 @@ class PDFParserTest {
       logger.warn { "for page $page got ${paragraphsForPage.size} paragraphs" }
 
       val originalImage = ImageIO.read(pagePNG)
-      val reprintedPagePNG = File("$page.PNG")
+      val reprintedPagePNG = File("$page-para.PNG")
       val aw = originalImage.width // * 1.1
       val ah = originalImage.height // * 1.1
       val imprintedImage =
-          ImageUtils.imprintTranslateResponseToImage(
+          ImageUtils.imprintBoundariesToImage(
               originalImage,
               paragraphsForPage.map {
-                TextBlock(
-                    "",
-                    TextBlockRectangle(
-                        (it.bounds.x * aw).toInt(),
-                        (it.bounds.y * ah).toInt(),
-                        (it.bounds.w * aw).toInt(),
-                        (it.bounds.h * ah).toInt()))
-              },
-              paragraphsForPage.map { it.text })
+                SimpleBoundary(
+                    (it.bounds.llx * aw).toInt(),
+                    (it.bounds.lly * ah).toInt(),
+                    (it.bounds.urx * aw).toInt(),
+                    (it.bounds.ury * ah).toInt())
+              })
       ImageIO.write(imprintedImage, "PNG", reprintedPagePNG)
       reprintedPagePNG
     }
 
     reprintedPagesPNG.forEach { logger.warn { it.absolutePath } }
   }
+
 
   @Test
   @Disabled
@@ -110,10 +143,10 @@ class PDFParserTest {
         val p = Phrase(it.text)
         ct.setSimpleColumn(
             p,
-            it.bounds.x * aw,
-            ah - (it.bounds.y + it.bounds.h) * eh,
-            (it.bounds.x + it.bounds.w) * ew,
-            ah - (it.bounds.y * ah),
+            it.bounds.llx * aw,
+            it.bounds.ury * ah,
+            it.bounds.urx * aw,
+            it.bounds.lly * ah,
             10.0f,
             Element.ALIGN_LEFT)
 //        cb.showTextAligned(

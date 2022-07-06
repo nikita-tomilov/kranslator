@@ -9,6 +9,13 @@ import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.Transferable
 import java.awt.image.BufferedImage
 
+data class SimpleBoundary(
+  val x1: Int,
+  val y1: Int,
+  val x2: Int,
+  val y2: Int
+)
+
 object ImageUtils {
 
   fun pasteImageFromClipboard(): BufferedImage? {
@@ -46,6 +53,21 @@ object ImageUtils {
     return target
   }
 
+  fun imprintBoundariesToImage(
+    target: BufferedImage,
+    boundaries: List<SimpleBoundary>
+  ): BufferedImage {
+    val hw = 10
+    val w = hw * 2
+    val g = target.createGraphics()
+    boundaries.forEach {
+      g.color = Color.RED
+      g.fillRect(it.x1 - hw, it.y1 - hw, w, w)
+      g.color = Color.GREEN
+      g.fillRect(it.x2 - hw, it.y2 - hw, w, w)
+    }
+    return target
+  }
 
   private fun renderTextBlock(text: String, block: TextBlockRectangle, g: Graphics2D) {
     g.color = Color.WHITE

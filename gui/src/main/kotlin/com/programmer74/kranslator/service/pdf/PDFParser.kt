@@ -14,16 +14,23 @@ object PDFParser : KLogging() {
     val lines = extractLines(file)
     return lines.groupBy { it.paragraph }.map { e ->
       val paragraphIndex = e.key
-      val linesForPage = e.value
-      val page = linesForPage.first().page
+      val linesForParagraph = e.value
+      val page = linesForParagraph.first().page
       val paragraphText =
-          linesForPage.filter { it.line.isNotBlank() }.joinToString("") { it.line }
-      val paragraphBounds = MappedBounds.from(linesForPage.map { it.bounds })
+          linesForParagraph.filter { it.line.isNotBlank() }.joinToString("") { it.line }
+      val firstLine = linesForParagraph.first()
+      val lastLine = linesForParagraph.last()
+      val widestLine = linesForParagraph.maxByOrNull { it.bounds.urx }!!
+      val paragraphBounds = MappedBounds(
+          lastLine.bounds.llx,
+          lastLine.bounds.lly,
+          widestLine.bounds.urx,
+          firstLine.bounds.ury)
       MappedParagraph(page, paragraphIndex, paragraphText, paragraphBounds)
     }
   }
 
-  private fun extractLines(file: File): List<MappedLine> {
+  fun extractLines(file: File): List<MappedLine> {
     var document: PDDocument? = null
     try {
       document = PDDocument.load(file)
