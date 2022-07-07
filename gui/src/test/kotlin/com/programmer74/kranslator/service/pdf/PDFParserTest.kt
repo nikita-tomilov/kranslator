@@ -1,8 +1,6 @@
 package com.programmer74.kranslator.service.pdf
 
-import com.lowagie.text.Document
-import com.lowagie.text.Element
-import com.lowagie.text.Phrase
+import com.lowagie.text.*
 import com.lowagie.text.pdf.BaseFont
 import com.lowagie.text.pdf.ColumnText
 import com.lowagie.text.pdf.PdfContentByte
@@ -14,9 +12,14 @@ import com.programmer74.kranslator.service.pdf.PDFParser.extractParagraphs
 import mu.KLogging
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import java.awt.image.BufferedImage
+import java.awt.image.BufferedImage.TYPE_INT_RGB
 import java.io.File
 import java.io.FileOutputStream
 import javax.imageio.ImageIO
+import javax.swing.text.StyleConstants.FontFamily
+import kotlin.math.abs
+import kotlin.math.min
 
 class PDFParserTest {
 
@@ -53,10 +56,10 @@ class PDFParserTest {
               originalImage,
               linesForPage.map {
                 SimpleBoundary(
-                        (it.bounds.llx * aw).toInt(),
-                        (it.bounds.lly * ah).toInt(),
-                        (it.bounds.urx * aw).toInt(),
-                        (it.bounds.ury * ah).toInt())
+                    (it.bounds.llx * aw).toInt(),
+                    (it.bounds.lly * ah).toInt(),
+                    (it.bounds.urx * aw).toInt(),
+                    (it.bounds.ury * ah).toInt())
               })
       ImageIO.write(imprintedImage, "PNG", reprintedPagePNG)
       reprintedPagePNG
@@ -100,10 +103,9 @@ class PDFParserTest {
     reprintedPagesPNG.forEach { logger.warn { it.absolutePath } }
   }
 
-
   @Test
   @Disabled
-  fun dummy3() {
+  fun columnTextDemo() {
     val ud = System.getProperty("user.dir")
     val file = File("$ud/src/test/resources/testpdf-saveaspdf.pdf")
     //val file = File("$ud/src/test/resources/testpdf-printedscanned.pdf")
@@ -119,45 +121,49 @@ class PDFParserTest {
     writer.isPageEmpty = false
     val cb: PdfContentByte = writer.directContent
 
-    val bf: BaseFont =
-        BaseFont.createFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED)
-
-    val coeff = 1.1
-
     paragraphsPerPage.forEach { (page, paragraphsPerPage) ->
       writer.newPage()
-
-      //cb.beginText()
-      cb.setFontAndSize(bf, 10.0f)
-
-      val ct = ColumnText(cb)
-      var i = 0
-
+      cb.beginText()
       val aw = document.pageSize.width
       val ah = document.pageSize.height
-      val ew = (document.pageSize.width * coeff).toFloat()
-      val eh = (document.pageSize.height * coeff).toFloat()
-
       paragraphsPerPage.forEach {
-        i++
-        val p = Phrase(it.text)
-        ct.setSimpleColumn(
-            p,
-            it.bounds.llx * aw,
-            it.bounds.ury * ah,
-            it.bounds.urx * aw,
-            it.bounds.lly * ah,
-            10.0f,
-            Element.ALIGN_LEFT)
-//        cb.showTextAligned(
-//            PdfContentByte.ALIGN_LEFT,
-//            it.text,
-//            it.bounds.x * document.pageSize.width,
-//            document.pageSize.height - it.bounds.y * document.pageSize.height,
-//            0.0f)
+        val p = Phrase(it.text + "\n")
+        val x = it.bounds.llx * aw
+        val y = ah - it.bounds.lly * ah
+        val w = it.bounds.width() * aw
+        val h = it.bounds.height() * ah
+
+        cb.saveState()
+
+        val ct = ColumnText(cb)
+        cb.setLineWidth(0f)
+        cb.rectangle(x, y, w, h)
+        cb.stroke()
+
+        val longestLine = it.lines.maxByOrNull { l -> l.bounds.width() }!!
+        var fontSizeCurrent = 6.0f
+        while (fontSizeCurrent < 72.0f) {
+          val font = Font(Font.HELVETICA, fontSizeCurrent)
+          val chunk = Chunk(longestLine.line, font)
+          if (chunk.widthPoint >= w) break
+          fontSizeCurrent += 1.0f
+        }
+        fontSizeCurrent -= 1.0f
+        fontSizeCurrent = min(fontSizeCurrent, (it.bounds.height() * ah))
+
+        logger.debug { "estimated font size: $fontSizeCurrent for height ${it.bounds.height() * ah}" }
+        val fontSize = fontSizeCurrent
+        val leading = if (it.lines.size > 1) fontSize * 1.2f else fontSize
+
+        val urx = x + w
+        val ury = y + h
+
+        p.font.size = fontSize
+        ct.setSimpleColumn(p, x, y, urx, ury, leading, Element.ALIGN_LEFT)
         ct.go()
+        cb.restoreState()
       }
-      //cb.endText()
+      cb.endText()
     }
     document.close()
 

@@ -1,5 +1,7 @@
 package com.programmer74.kranslator.service.pdf
 
+import kotlin.math.abs
+
 data class MappedBounds(
   val llx: Float,
   val lly: Float,
@@ -9,6 +11,9 @@ data class MappedBounds(
   override fun toString(): String {
     return "$llx;$lly - $urx;$ury"
   }
+
+  fun width() = abs(llx - urx)
+  fun height() = abs(lly - ury)
 
   companion object {
     fun <T> from(

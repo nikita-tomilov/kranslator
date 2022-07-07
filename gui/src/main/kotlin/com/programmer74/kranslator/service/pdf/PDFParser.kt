@@ -17,7 +17,7 @@ object PDFParser : KLogging() {
       val linesForParagraph = e.value
       val page = linesForParagraph.first().page
       val paragraphText =
-          linesForParagraph.filter { it.line.isNotBlank() }.joinToString("") { it.line }
+          linesForParagraph.filter { it.line.isNotBlank() }.joinToString(" ") { it.line.trim() }
       val firstLine = linesForParagraph.first()
       val lastLine = linesForParagraph.last()
       val widestLine = linesForParagraph.maxByOrNull { it.bounds.urx }!!
@@ -26,7 +26,7 @@ object PDFParser : KLogging() {
           lastLine.bounds.lly,
           widestLine.bounds.urx,
           firstLine.bounds.ury)
-      MappedParagraph(page, paragraphIndex, paragraphText, paragraphBounds)
+      MappedParagraph(page, paragraphIndex, paragraphText, paragraphBounds, linesForParagraph)
     }
   }
 

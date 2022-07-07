@@ -113,7 +113,7 @@ object ImageUtils {
     }
   }
 
-  private fun getMaxFittingFontSize(
+  fun getMaxFittingFontSize(
     g: Graphics,
     font: Font,
     string: String?,
