@@ -1,22 +1,18 @@
 package com.programmer74.kranslator.view
 
-import com.lowagie.text.Document
-import com.lowagie.text.RectangleReadOnly
-import com.lowagie.text.pdf.PdfWriter
 import com.programmer74.kranslator.ocr.*
 import com.programmer74.kranslator.service.graphics.ImageUtils
 import com.programmer74.kranslator.service.ocr.RemoteTesseractKtor
-import com.programmer74.kranslator.service.pdf.PDFConverter
+import com.programmer74.kranslator.service.pdf.PDFCreator
+import com.programmer74.kranslator.service.pdf.PDFParser
 import com.programmer74.kranslator.service.translation.LibreTranslate
 import com.programmer74.kranslator.translate.Translator
 import com.programmer74.kranslator.translate.TranslatorLanguage
 import com.programmer74.kranslator.translate.TranslatorRequest
 import javafx.application.Platform
 import mu.KLogging
-import java.awt.*
 import java.awt.image.BufferedImage
 import java.io.File
-import java.io.FileOutputStream
 import java.nio.file.Files
 import java.util.concurrent.Executors
 import javax.imageio.ImageIO
@@ -43,7 +39,7 @@ class MainController {
     fromLanguage: TranslatorLanguage,
     toLanguage: TranslatorLanguage,
     progressCallback: (String) -> Unit,
-    ocrBatchCallback: (List<TextBlock>) -> Unit,
+    ocrBatchCallback: (List<String>) -> Unit,
     translateBatchCallback: (List<String>) -> Unit,
     resultCallback: (File) -> Unit
   ) {
@@ -97,7 +93,7 @@ class MainController {
 
   fun imprintTranslateResponseToImage(
     image: BufferedImage,
-    ocrBlocks: List<TextBlock>,
+    ocrBlocks: List<TextBlockRectangle>,
     translatedTexts: List<String>,
     callback: (BufferedImage) -> Unit
   ) {
@@ -115,54 +111,34 @@ class MainController {
     fromLanguage: TranslatorLanguage,
     toLanguage: TranslatorLanguage,
     progressCallback: (String) -> Unit,
-    ocrBatchCallback: (List<TextBlock>) -> Unit,
+    ocrBatchCallback: (List<String>) -> Unit,
     translateBatchCallback: (List<String>) -> Unit,
     resultCallback: (File) -> Unit
   ) {
     log(progressCallback, "Attempting to translate file ${pdf.absolutePath}...")
-    val pagesPNG = PDFConverter.convertPDFToImages(pdf) { log(progressCallback, it) }
-    val n = pagesPNG.size
-    val translatedPagesPNG = pagesPNG.mapIndexed { index, pagePNG ->
-      val page = index + 1
+    val paragraphs = PDFParser.extractParagraphs(pdf)
+    Platform.runLater { ocrBatchCallback.invoke(paragraphs.map { it.text }) }
 
-      log(progressCallback, "$page/$n Performing OCR")
-      val textBlocks = ocr(pagePNG, fromLanguage)
-      Platform.runLater { ocrBatchCallback.invoke(textBlocks) }
+    val n = paragraphs.size
+    val translatedParagraphs = paragraphs.mapIndexed { index, it ->
 
-      log(progressCallback, "$page/$n Performing translation")
-      val translatedTexts = textBlocks.map { textBlock ->
-        val translatedText = translatorInstance.translate(
-            TranslatorRequest(
-                textBlock.text,
-                fromLanguage,
-                toLanguage))
-        Platform.runLater { translateBatchCallback.invoke(listOf(translatedText)) }
-        Thread.sleep(100)
-        translatedText
-      }
+      log(progressCallback, "$index/$n Performing translation")
+      val translatedText = translatorInstance.translate(
+          TranslatorRequest(
+              it.text,
+              fromLanguage,
+              toLanguage))
+      Platform.runLater { translateBatchCallback.invoke(listOf(translatedText)) }
+      Thread.sleep(1000)
 
-      log(progressCallback, "$page/$n Converting back to image...")
-      val originalImage = ImageIO.read(pagePNG)
-      val translatedPagePNG = File(pagePNG.absolutePath + "-t.png")
-      val imprintedImage =
-          ImageUtils.imprintTranslateResponseToImage(originalImage, textBlocks, translatedTexts)
-      ImageIO.write(imprintedImage, "PNG", translatedPagePNG)
-      translatedPagePNG
+      it.copy(text = translatedText)
     }
 
     log(progressCallback, "Attempting to reassemble the original PDF...")
-    val target = File(pdf.absolutePath + "-translated.pdf")
-    val document = Document(RectangleReadOnly(4960.0f, 7016.0f), 0.0f, 0.0f, 0.0f, 0.0f)
-    val outputStream = FileOutputStream(target)
-
-    PdfWriter.getInstance(document, outputStream)
-    document.open()
-    translatedPagesPNG.forEach { imageFile ->
-      document.newPage()
-      document.add(com.lowagie.text.Image.getInstance(imageFile.absolutePath))
-      Files.delete(imageFile.toPath())
-    }
-    document.close()
+    val target =
+        File(pdf.absolutePath + "--${fromLanguage.twoLetterCode}-${toLanguage.twoLetterCode}.pdf")
+    PDFCreator.createViaColumnText(target, translatedParagraphs) // -- this sometimes cuts off the words; we need to fix it later.
+    //PDFCreator.createViaPNG(target, translatedParagraphs) // -- this does not draw in multiple lines!
     Platform.runLater { resultCallback.invoke(target) }
   }
 

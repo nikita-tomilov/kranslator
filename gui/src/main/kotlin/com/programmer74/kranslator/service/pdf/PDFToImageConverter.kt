@@ -8,7 +8,7 @@ import org.apache.pdfbox.tools.imageio.ImageIOUtil
 import java.io.File
 import java.nio.file.Files
 
-object PDFConverter {
+object PDFToImageConverter {
 
   fun convertPDFToImages(pdf: File, logCallback: (String) -> Unit = {}): List<File> {
     val ans = ArrayList<File>()

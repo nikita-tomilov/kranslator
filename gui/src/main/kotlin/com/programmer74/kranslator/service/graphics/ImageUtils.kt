@@ -40,13 +40,13 @@ object ImageUtils {
 
   fun imprintTranslateResponseToImage(
     target: BufferedImage,
-    ocrBlocks: List<TextBlock>,
+    ocrBlocks: List<TextBlockRectangle>,
     translatedTexts: List<String>
   ): BufferedImage {
     val g = target.createGraphics()
     assert(ocrBlocks.size == translatedTexts.size)
     (ocrBlocks.indices).forEach { i ->
-      val block = ocrBlocks[i].block
+      val block = ocrBlocks[i]
       val text = translatedTexts[i]
       renderTextBlock(text, block, g)
     }

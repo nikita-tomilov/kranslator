@@ -47,7 +47,7 @@ class MainView : Fragment("Translator") {
       resultText.set(it.joinToString("\n"))
       controller.imprintTranslateResponseToImage(
           originalImage.get(),
-          imageOCRResults.get(),
+          imageOCRResults.get().map { o -> o.block },
           it) { img ->
         resultImageSwing.set(SwingFXUtils.toFXImage(img, null))
         resultImageViewPane.prefHeightProperty().unbind()
@@ -79,13 +79,13 @@ class MainView : Fragment("Translator") {
         fromLanguage.get(),
         toLanguage.get(),
         { logString.set(it) },
-        { ob -> originalText.set(originalText.get() + ob.joinToString("\n") { it.text } + "\n") },
+        { ob -> originalText.set(originalText.get() + ob.joinToString("\n") + "\n") },
         { tb -> resultText.set(resultText.get() + tb.joinToString("\n") + "\n")},
         {
           logString.set("")
           actionInProgress.set(false)
           logger.warn { it }
-          resultText.set("Please see ${it.absolutePath}")
+          resultText.set(resultText.get() + "\n==========\nPlease see ${it.absolutePath}")
         }
     )
   }
@@ -212,6 +212,7 @@ class MainView : Fragment("Translator") {
           }
           prefHeightProperty().bind(rootHeight)
           minHeightProperty().bind(rootHeight.divide(2))
+          wrapTextProperty().set(true)
         }
         scrollpane {
           imageview {
@@ -227,6 +228,7 @@ class MainView : Fragment("Translator") {
           isEditable = false
           prefHeightProperty().bind(rootHeight)
           minHeightProperty().bind(rootHeight.divide(2))
+          wrapTextProperty().set(true)
         }
         scrollpane {
           imageview {

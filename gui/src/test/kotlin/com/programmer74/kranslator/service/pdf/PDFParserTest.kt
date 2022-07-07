@@ -1,10 +1,5 @@
 package com.programmer74.kranslator.service.pdf
 
-import com.lowagie.text.*
-import com.lowagie.text.pdf.BaseFont
-import com.lowagie.text.pdf.ColumnText
-import com.lowagie.text.pdf.PdfContentByte
-import com.lowagie.text.pdf.PdfWriter
 import com.programmer74.kranslator.service.graphics.ImageUtils
 import com.programmer74.kranslator.service.graphics.SimpleBoundary
 import com.programmer74.kranslator.service.pdf.PDFParser.extractLines
@@ -12,14 +7,8 @@ import com.programmer74.kranslator.service.pdf.PDFParser.extractParagraphs
 import mu.KLogging
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import java.awt.image.BufferedImage
-import java.awt.image.BufferedImage.TYPE_INT_RGB
 import java.io.File
-import java.io.FileOutputStream
 import javax.imageio.ImageIO
-import javax.swing.text.StyleConstants.FontFamily
-import kotlin.math.abs
-import kotlin.math.min
 
 class PDFParserTest {
 
@@ -40,7 +29,7 @@ class PDFParserTest {
     val file = File("$ud/src/test/resources/testpdf-saveaspdf.pdf")
     //val file = File("$ud/src/test/resources/testpdf-printedscanned.pdf")
     val lines = extractLines(file)
-    val pagesPNG = PDFConverter.convertPDFToImages(file)
+    val pagesPNG = PDFToImageConverter.convertPDFToImages(file)
 
     val reprintedPagesPNG = pagesPNG.mapIndexed { index, pagePNG ->
       val page = index + 1
@@ -73,9 +62,8 @@ class PDFParserTest {
   fun paragraphCoordinatesDemo() {
     val ud = System.getProperty("user.dir")
     val file = File("$ud/src/test/resources/testpdf-saveaspdf.pdf")
-    //val file = File("$ud/src/test/resources/testpdf-printedscanned.pdf")
     val paragraphs = extractParagraphs(file)
-    val pagesPNG = PDFConverter.convertPDFToImages(file)
+    val pagesPNG = PDFToImageConverter.convertPDFToImages(file)
 
     val reprintedPagesPNG = pagesPNG.mapIndexed { index, pagePNG ->
       val page = index + 1
@@ -108,64 +96,23 @@ class PDFParserTest {
   fun columnTextDemo() {
     val ud = System.getProperty("user.dir")
     val file = File("$ud/src/test/resources/testpdf-saveaspdf.pdf")
-    //val file = File("$ud/src/test/resources/testpdf-printedscanned.pdf")
-    val paragraphs = PDFParser.extractParagraphs(file)
-    val paragraphsPerPage = paragraphs.groupBy { it.page }.toMap()
+    val paragraphs = extractParagraphs(file)
 
     val target = File(file.absolutePath + "-2.pdf")
-    val document = Document()
-    val outputStream = FileOutputStream(target)
+    PDFCreator.createViaColumnText(target, paragraphs)
 
-    val writer = PdfWriter.getInstance(document, outputStream)
-    document.open()
-    writer.isPageEmpty = false
-    val cb: PdfContentByte = writer.directContent
+    logger.warn { target.absolutePath }
+  }
 
-    paragraphsPerPage.forEach { (page, paragraphsPerPage) ->
-      writer.newPage()
-      cb.beginText()
-      val aw = document.pageSize.width
-      val ah = document.pageSize.height
-      paragraphsPerPage.forEach {
-        val p = Phrase(it.text + "\n")
-        val x = it.bounds.llx * aw
-        val y = ah - it.bounds.lly * ah
-        val w = it.bounds.width() * aw
-        val h = it.bounds.height() * ah
+  @Test
+  @Disabled
+  fun directPNGDemo() {
+    val ud = System.getProperty("user.dir")
+    val file = File("$ud/src/test/resources/testpdf-saveaspdf.pdf")
+    val paragraphs = extractParagraphs(file)
 
-        cb.saveState()
-
-        val ct = ColumnText(cb)
-        cb.setLineWidth(0f)
-        cb.rectangle(x, y, w, h)
-        cb.stroke()
-
-        val longestLine = it.lines.maxByOrNull { l -> l.bounds.width() }!!
-        var fontSizeCurrent = 6.0f
-        while (fontSizeCurrent < 72.0f) {
-          val font = Font(Font.HELVETICA, fontSizeCurrent)
-          val chunk = Chunk(longestLine.line, font)
-          if (chunk.widthPoint >= w) break
-          fontSizeCurrent += 1.0f
-        }
-        fontSizeCurrent -= 1.0f
-        fontSizeCurrent = min(fontSizeCurrent, (it.bounds.height() * ah))
-
-        logger.debug { "estimated font size: $fontSizeCurrent for height ${it.bounds.height() * ah}" }
-        val fontSize = fontSizeCurrent
-        val leading = if (it.lines.size > 1) fontSize * 1.2f else fontSize
-
-        val urx = x + w
-        val ury = y + h
-
-        p.font.size = fontSize
-        ct.setSimpleColumn(p, x, y, urx, ury, leading, Element.ALIGN_LEFT)
-        ct.go()
-        cb.restoreState()
-      }
-      cb.endText()
-    }
-    document.close()
+    val target = File(file.absolutePath + "-2.pdf")
+    PDFCreator.createViaPNG(target, paragraphs)
 
     logger.warn { target.absolutePath }
   }
