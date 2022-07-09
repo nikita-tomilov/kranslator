@@ -13,7 +13,8 @@ import feign.jackson.JacksonEncoder
 
 class LibreTranslate(
   private val target: String = "https://libretranslate.de",
-  private val characterLimit: Int = 240
+  private val characterLimit: Int = 240,
+  private val msPauseBetweenApiCalls: Long = 1000L
 ) : Translator {
 
   private val om = ObjectMapper().registerKotlinModule()
@@ -42,12 +43,14 @@ class LibreTranslate(
     text: String,
     source: TranslatorLanguage,
     target: TranslatorLanguage
-  ) : String {
-    return api.translate(
+  ): String {
+    val response = api.translate(
         LibreTranslateRequest(
             text,
             source.twoLetterCode,
             target.twoLetterCode)).translatedText
+    Thread.sleep(msPauseBetweenApiCalls)
+    return response
   }
 
   inline fun <T> Iterable<T>.chunkedBy(maxSize: Int, size: T.() -> Int): List<List<T>> {

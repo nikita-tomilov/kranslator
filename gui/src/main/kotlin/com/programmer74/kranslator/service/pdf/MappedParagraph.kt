@@ -1,14 +1,21 @@
 package com.programmer74.kranslator.service.pdf
 
-import kotlin.math.abs
-
 data class MappedParagraph(
   val page: Int,
   val paragraphIndex: Int,
-  val text: String,
+  val originalText: String,
+  val translatedText: String,
   val bounds: MappedBounds,
-  val lines: List<MappedLine>
-)
+  val originalLines: List<MappedLine>
+) {
+  constructor(
+    page: Int,
+    paragraphIndex: Int,
+    text: String,
+    bounds: MappedBounds,
+    lines: List<MappedLine>
+  ) : this(page, paragraphIndex, text, text, bounds, lines)
+}
 
 data class MappedLine(
   val page: Int,

@@ -85,7 +85,7 @@ object ImageUtils {
 
   //https://stackoverflow.com/questions/12485236/finding-maximum-font-size-to-fit-in-region-java
   private fun drawTextToFit(text: String, g: Graphics2D, maxRect: TextBlockRectangle) {
-    val lines = text.split("\n")
+    val lines = text.lines()
     val linesCount = lines.count()
 
     val lineHeight = maxRect.h / linesCount

@@ -5,7 +5,7 @@ import com.programmer74.kranslator.service.graphics.ImageUtils
 import com.programmer74.kranslator.service.ocr.RemoteTesseractKtor
 import com.programmer74.kranslator.service.pdf.PDFCreator
 import com.programmer74.kranslator.service.pdf.PDFParser
-import com.programmer74.kranslator.service.translation.LibreTranslate
+import com.programmer74.kranslator.service.translation.TranslatorFactory
 import com.programmer74.kranslator.translate.Translator
 import com.programmer74.kranslator.translate.TranslatorLanguage
 import com.programmer74.kranslator.translate.TranslatorRequest
@@ -19,7 +19,7 @@ import javax.imageio.ImageIO
 
 class MainController {
 
-  private val translatorInstance: Translator = LibreTranslate()
+  private val translatorInstance: Translator = TranslatorFactory.getInstance()
   private val ocrInstance: CharacterRecognizer = RemoteTesseractKtor()
   private val ex = Executors.newSingleThreadExecutor()
 
@@ -117,27 +117,26 @@ class MainController {
   ) {
     log(progressCallback, "Attempting to translate file ${pdf.absolutePath}...")
     val paragraphs = PDFParser.extractParagraphs(pdf)
-    Platform.runLater { ocrBatchCallback.invoke(paragraphs.map { it.text }) }
+    Platform.runLater { ocrBatchCallback.invoke(paragraphs.map { it.originalText }) }
 
     val n = paragraphs.size
     val translatedParagraphs = paragraphs.mapIndexed { index, it ->
 
-      log(progressCallback, "$index/$n Performing translation")
+      log(progressCallback, "${index + 1}/$n Performing translation")
       val translatedText = translatorInstance.translate(
           TranslatorRequest(
-              it.text,
+              it.originalText,
               fromLanguage,
               toLanguage))
       Platform.runLater { translateBatchCallback.invoke(listOf(translatedText)) }
-      Thread.sleep(1000)
 
-      it.copy(text = translatedText)
+      it.copy(originalText = it.originalText, translatedText = translatedText)
     }
 
     log(progressCallback, "Attempting to reassemble the original PDF...")
     val target =
         File(pdf.absolutePath + "--${fromLanguage.twoLetterCode}-${toLanguage.twoLetterCode}.pdf")
-    PDFCreator.createViaColumnText(target, translatedParagraphs) // -- this sometimes cuts off the words; we need to fix it later.
+    PDFCreator.createViaText(target, translatedParagraphs) // -- this sometimes cuts off the words; we need to fix it later.
     //PDFCreator.createViaPNG(target, translatedParagraphs) // -- this does not draw in multiple lines!
     Platform.runLater { resultCallback.invoke(target) }
   }

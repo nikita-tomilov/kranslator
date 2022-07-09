@@ -4,6 +4,7 @@ import com.programmer74.kranslator.service.graphics.ImageUtils
 import com.programmer74.kranslator.service.graphics.SimpleBoundary
 import com.programmer74.kranslator.service.pdf.PDFParser.extractLines
 import com.programmer74.kranslator.service.pdf.PDFParser.extractParagraphs
+import com.programmer74.kranslator.util.TextUtils
 import mu.KLogging
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -92,6 +93,18 @@ class PDFParserTest {
   }
 
   @Test
+  fun paragraphSmartSplitByLines() {
+    val ud = System.getProperty("user.dir")
+    val file = File("$ud/src/test/resources/testpdf-saveaspdf.pdf")
+    val paragraphs = extractParagraphs(file)[4]
+    val originalTextLines = paragraphs.originalLines.map { it.line }
+    val translatedText = originalTextLines.joinToString(" ")
+
+    val translatedTextSplitted = TextUtils.splitTranslatedParagraphToLines(translatedText, originalTextLines)
+    val i = 1
+  }
+
+  @Test
   @Disabled
   fun columnTextDemo() {
     val ud = System.getProperty("user.dir")
@@ -99,7 +112,7 @@ class PDFParserTest {
     val paragraphs = extractParagraphs(file)
 
     val target = File(file.absolutePath + "-2.pdf")
-    PDFCreator.createViaColumnText(target, paragraphs)
+    PDFCreator.createViaText(target, paragraphs)
 
     logger.warn { target.absolutePath }
   }

@@ -72,7 +72,7 @@ class MainView : Fragment("Translator") {
   }
 
   private fun translatePDFAction(f: File) {
-    originalText.set("")
+    originalText.set(f.absolutePath + "\n==========\n\n")
     resultText.set("")
     controller.translate(
         f,
@@ -158,11 +158,14 @@ class MainView : Fragment("Translator") {
 
     }
     if (s.startsWith("file://")) return isFile(s.replace("file://", ""))
+    val lines = s.lines()
+    if (lines.size > 1) return isFile(lines.first())
     return false
   }
 
   private fun normalizeFile(s: String): File {
     var path = s
+    if (s.lines().size > 1) path = s.lines().first()
     if (path.startsWith("file://")) path = path.replaceFirst("file://", "")
     if (System.getProperty ("os.name").lowercase().contains("windows")) {
       if (path.startsWith("/")) path = path.replaceFirst("/", "")
