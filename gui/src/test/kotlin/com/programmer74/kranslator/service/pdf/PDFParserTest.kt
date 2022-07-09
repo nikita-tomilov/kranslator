@@ -105,6 +105,14 @@ class PDFParserTest {
   }
 
   @Test
+  fun pdfBuildWorks() {
+    val ud = System.getProperty("user.dir")
+    val file = File("$ud/src/test/resources/testpdf-saveaspdf.pdf")
+    val paragraphs = extractParagraphs(file).mapIndexed { index, it -> it.copy(page = index + 1) }
+    PDFCreator.createViaText(File(file.absolutePath + "-2.pdf"), paragraphs)
+  }
+
+  @Test
   @Disabled
   fun columnTextDemo() {
     val ud = System.getProperty("user.dir")

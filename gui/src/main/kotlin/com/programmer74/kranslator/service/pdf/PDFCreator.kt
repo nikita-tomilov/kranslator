@@ -1,12 +1,13 @@
 package com.programmer74.kranslator.service.pdf
 
-import com.lowagie.text.*
+import com.lowagie.text.Document
+import com.lowagie.text.Image
+import com.lowagie.text.RectangleReadOnly
 import com.lowagie.text.pdf.BaseFont
 import com.lowagie.text.pdf.PdfContentByte
 import com.lowagie.text.pdf.PdfWriter
 import com.programmer74.kranslator.ocr.TextBlockRectangle
 import com.programmer74.kranslator.service.graphics.ImageUtils
-import com.programmer74.kranslator.service.pdf.PDFParser.logger
 import com.programmer74.kranslator.util.TextUtils
 import java.awt.Color
 import java.awt.image.BufferedImage
@@ -15,7 +16,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.nio.file.Files
 import javax.imageio.ImageIO
-import kotlin.math.min
 
 object PDFCreator {
 
@@ -28,8 +28,7 @@ object PDFCreator {
 
     val writer = PdfWriter.getInstance(document, outputStream)
     document.open()
-    //TODO: fix multiple pages
-    //writer.isPageEmpty = false
+
     val cb: PdfContentByte = writer.directContent
 
     paragraphsPerPage.forEach { (page, paragraphsPerPage) ->
@@ -68,6 +67,7 @@ object PDFCreator {
         cb.restoreState()
       }
       cb.endText()
+      document.newPage()
     }
     document.close()
   }
@@ -112,7 +112,13 @@ object PDFCreator {
     document.close()
   }
 
-  private fun maxFontSize(bf: BaseFont, lines: List<String>, bounds: MappedBounds, aw: Float, ah: Float): Float {
+  private fun maxFontSize(
+    bf: BaseFont,
+    lines: List<String>,
+    bounds: MappedBounds,
+    aw: Float,
+    ah: Float
+  ): Float {
     val w = bounds.width() * aw
     val longestLine = lines.maxByOrNull { l -> bf.getWidth(l) }
     var fontSizeCurrent = 6.0f
