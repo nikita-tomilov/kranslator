@@ -17,7 +17,9 @@ import java.nio.file.Files
 import java.util.concurrent.Executors
 import javax.imageio.ImageIO
 
-class MainController {
+class MainController(
+  private val directExecutions: Boolean = false
+) {
 
   private val translatorInstance: Translator = TranslatorFactory.getInstance()
   private val ocrInstance: CharacterRecognizer = RemoteTesseractKtor()
@@ -27,9 +29,13 @@ class MainController {
 
   fun translate(requests: List<TranslatorRequest>, callback: (List<String>) -> Unit) {
     ex.submit {
-      val results = requests.map { translatorInstance.translate(it) }
-      Platform.runLater {
-        callback(results)
+      try {
+        val results = requests.map { translatorInstance.translate(it) }
+        run {
+          callback(results)
+        }
+      } catch (e: Exception) {
+        logger.error { e }
       }
     }
   }
@@ -44,14 +50,18 @@ class MainController {
     resultCallback: (File) -> Unit
   ) {
     ex.submit {
-      translatePDF(
-          pdf,
-          fromLanguage,
-          toLanguage,
-          progressCallback,
-          ocrBatchCallback,
-          translateBatchCallback,
-          resultCallback)
+      try {
+        translatePDF(
+            pdf,
+            fromLanguage,
+            toLanguage,
+            progressCallback,
+            ocrBatchCallback,
+            translateBatchCallback,
+            resultCallback)
+      } catch (e: Exception) {
+        logger.error { e }
+      }
     }
   }
 
@@ -60,16 +70,16 @@ class MainController {
       try {
         val clipboardImage = ImageUtils.pasteImageFromClipboard()
         if (clipboardImage != null) {
-          Platform.runLater {
+          run {
             success(clipboardImage)
           }
         } else {
-          Platform.runLater {
+          run {
             error("Unable to get image from the clipboard")
           }
         }
       } catch (e: Exception) {
-        Platform.runLater {
+        run {
           error(e.message ?: e.toString())
         }
       }
@@ -81,7 +91,7 @@ class MainController {
       val tmp = Files.createTempFile("img", ".png").toFile()
       ImageIO.write(image, "png", tmp)
       val results = ocr(tmp, language)
-      Platform.runLater {
+      run {
         callback(results)
       }
     }
@@ -100,7 +110,7 @@ class MainController {
     ex.submit {
       val printedImage =
           ImageUtils.imprintTranslateResponseToImage(image.deepCopy(), ocrBlocks, translatedTexts)
-      Platform.runLater {
+      run {
         callback(printedImage)
       }
     }
@@ -116,8 +126,11 @@ class MainController {
     resultCallback: (File) -> Unit
   ) {
     log(progressCallback, "Attempting to translate file ${pdf.absolutePath}...")
-    val paragraphs = PDFParser.extractParagraphs(pdf)
-    Platform.runLater { ocrBatchCallback.invoke(paragraphs.map { it.originalText }) }
+    val paragraphsUnmerged = PDFParser.extractParagraphs(pdf)
+    log(progressCallback, "Got ${paragraphsUnmerged.size} raw paragraphs/lines")
+    val paragraphs = paragraphsUnmerged //PDFParser.tryMergeParagraphs(paragraphsUnmerged)
+    log(progressCallback, "Got ${paragraphs.size} paragraphs")
+    run { ocrBatchCallback.invoke(paragraphs.map { it.originalText }) }
 
     val n = paragraphs.size
     val translatedParagraphs = paragraphs.mapIndexed { index, it ->
@@ -128,7 +141,7 @@ class MainController {
               it.originalText,
               fromLanguage,
               toLanguage))
-      Platform.runLater { translateBatchCallback.invoke(listOf(translatedText)) }
+      run { translateBatchCallback.invoke(listOf(translatedText)) }
 
       it.copy(originalText = it.originalText, translatedText = translatedText)
     }
@@ -136,13 +149,21 @@ class MainController {
     log(progressCallback, "Attempting to reassemble the original PDF...")
     val target =
         File(pdf.absolutePath + "--${fromLanguage.twoLetterCode}-${toLanguage.twoLetterCode}.pdf")
-    PDFCreator.createViaText(target, translatedParagraphs) // -- this sometimes cuts off the words; we need to fix it later.
+    PDFCreator.createViaText(target, translatedParagraphs)
     //PDFCreator.createViaPNG(target, translatedParagraphs) // -- this does not draw in multiple lines!
-    Platform.runLater { resultCallback.invoke(target) }
+    run { resultCallback.invoke(target) }
   }
 
   private fun log(progressCallback: (String) -> Unit, s: String) {
-    Platform.runLater { progressCallback(s) }
+    run { progressCallback(s) }
+  }
+
+  private fun run(lambda: () -> Unit) {
+    if (directExecutions) {
+      lambda()
+    } else {
+      Platform.runLater { lambda() }
+    }
   }
 
   companion object : KLogging()

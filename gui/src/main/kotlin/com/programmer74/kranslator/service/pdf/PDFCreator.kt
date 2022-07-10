@@ -16,6 +16,8 @@ import java.io.File
 import java.io.FileOutputStream
 import java.nio.file.Files
 import javax.imageio.ImageIO
+import kotlin.math.max
+import kotlin.math.min
 
 object PDFCreator {
 
@@ -39,26 +41,34 @@ object PDFCreator {
       //1 point = 1/72 inch
       paragraphsPerPage.forEach {
         val x = it.bounds.llx * aw
-        val y = ah - it.bounds.lly * ah
+        var y = ah - it.bounds.lly * ah
         val w = it.bounds.width() * aw
-        val h = it.bounds.height() * ah
+        var h = it.bounds.height() * ah
 
         cb.saveState()
+
+        val translatedParagraphLines = TextUtils.splitTranslatedParagraphToLines(
+            it.translatedText,
+            it.originalLines.map { l -> l.line })
+        val fontSize = maxFontSize(font, translatedParagraphLines, it.bounds, aw, ah)
+        cb.setFontAndSize(font, fontSize)
+
+        if (fontSize * translatedParagraphLines.size > h) {
+          val newH = fontSize * translatedParagraphLines.size
+          val deltaH = newH - h
+          y += (deltaH / 2)
+          h = newH
+        }
 
         cb.setLineWidth(0f)
         cb.rectangle(x, y, w, h)
         cb.stroke()
 
-        val translatedParagraphLines = TextUtils.splitTranslatedParagraphToLines(
-            it.translatedText,
-            it.originalLines.map { l -> l.line })
-        cb.setFontAndSize(font, maxFontSize(font, translatedParagraphLines, it.bounds, aw, ah))
-
         //due to weird coordinates behavior (e.g. sometimes y is lly, sometimes y is ury)
         //this has to be like this, even if it may seem wrong
         val ury = y + h
         var cy = ury
-        val dy = h / translatedParagraphLines.size
+        val dy = fontSize // h / translatedParagraphLines.size
         translatedParagraphLines.forEach { translatedLine ->
           cy -= dy
           cb.showTextAligned(PdfContentByte.ALIGN_LEFT, translatedLine, x, cy, 0.0f)
@@ -120,8 +130,10 @@ object PDFCreator {
     ah: Float
   ): Float {
     val w = bounds.width() * aw
+    val h = bounds.height() * ah / lines.size
     val longestLine = lines.maxByOrNull { l -> bf.getWidth(l) }
-    var fontSizeCurrent = 6.0f
+    val absoluteMinimumSize = 8.0f
+    var fontSizeCurrent = absoluteMinimumSize
     while (fontSizeCurrent < 72.0f) {
       val lineWidth = bf.getWidthPointKerned(longestLine, fontSizeCurrent)
       if (lineWidth > w) break
@@ -129,6 +141,13 @@ object PDFCreator {
     }
 
     fontSizeCurrent -= 1.0f
+    fontSizeCurrent = if (lines.size <= 2) {
+      min(fontSizeCurrent, h * 1.5f)
+    } else {
+      min(fontSizeCurrent, h)
+    }
+
+    fontSizeCurrent = max(absoluteMinimumSize, fontSizeCurrent)
     return fontSizeCurrent
   }
 }

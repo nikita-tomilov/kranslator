@@ -20,11 +20,12 @@ object PDFParser : KLogging() {
           linesForParagraph.filter { it.line.isNotBlank() }.joinToString(" ") { it.line.trim() }
       val firstLine = linesForParagraph.first()
       val lastLine = linesForParagraph.last()
-      val widestLine = linesForParagraph.maxByOrNull { it.bounds.urx }!!
+      val leastLlxLine = linesForParagraph.minByOrNull { it.bounds.llx }!!
+      val mostUrxLine = linesForParagraph.maxByOrNull { it.bounds.urx }!!
       val paragraphBounds = MappedBounds(
-          lastLine.bounds.llx,
+          leastLlxLine.bounds.llx,
           lastLine.bounds.lly,
-          widestLine.bounds.urx,
+          mostUrxLine.bounds.urx,
           firstLine.bounds.ury)
       MappedParagraph(page, paragraphIndex, paragraphText, paragraphBounds, linesForParagraph)
     }

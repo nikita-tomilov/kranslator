@@ -1,6 +1,8 @@
 package com.programmer74.kranslator.service.pdf
 
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 data class MappedBounds(
   val llx: Float,

@@ -14,7 +14,7 @@ object TextUtils {
     val translatedTextWords = translatedText.words()
 
     val originalWordsCount = originalTextWords.map { it.value.size }.sum()
-    val originalLinesCount = originalTextLines.size
+    val originalLinesCount = originalTextLines.filter { it.length > 2 }.size
     val originalWordsPerLine = ceil(originalWordsCount * 1.0 / originalLinesCount).roundToInt()
 
     var translatedTextLines = translatedTextWords
