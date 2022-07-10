@@ -36,14 +36,11 @@ class MainView : Fragment("Translator") {
   private val actionInProgress = SimpleBooleanProperty(false)
   private val logString = SimpleStringProperty("")
   private fun translateOCRedImageAction() {
-    val requests =
-        imageOCRResults.get().map {
-          TranslatorRequest(
-              it.text,
-              fromLanguage.get(),
-              toLanguage.get())
-        }
-    controller.translate(requests) {
+    val request = TranslatorRequest(
+        imageOCRResults.get().map { it.text },
+        fromLanguage.get(),
+        toLanguage.get())
+    controller.translate(request) {
       resultText.set(it.joinToString("\n"))
       controller.imprintTranslateResponseToImage(
           originalImage.get(),
@@ -59,13 +56,8 @@ class MainView : Fragment("Translator") {
   }
 
   private fun translateTextAction() {
-    val requests =
-        listOf(
-            TranslatorRequest(
-                originalText.get(),
-                fromLanguage.get(),
-                toLanguage.get()))
-    controller.translate(requests) {
+    val request = TranslatorRequest(originalText.get(), fromLanguage.get(), toLanguage.get())
+    controller.translate(request) {
       actionInProgress.set(false)
       resultText.set(it.joinToString("\n"))
     }
@@ -80,7 +72,7 @@ class MainView : Fragment("Translator") {
         toLanguage.get(),
         { logString.set(it) },
         { ob -> originalText.set(originalText.get() + ob.joinToString("\n") + "\n") },
-        { tb -> resultText.set(resultText.get() + tb.joinToString("\n") + "\n")},
+        { tb -> resultText.set(resultText.get() + tb.joinToString("\n") + "\n") },
         {
           logString.set("")
           actionInProgress.set(false)
@@ -167,7 +159,7 @@ class MainView : Fragment("Translator") {
     var path = s
     if (s.lines().size > 1) path = s.lines().first()
     if (path.startsWith("file://")) path = path.replaceFirst("file://", "")
-    if (System.getProperty ("os.name").lowercase().contains("windows")) {
+    if (System.getProperty("os.name").lowercase().contains("windows")) {
       if (path.startsWith("/")) path = path.replaceFirst("/", "")
     }
     return File(path)

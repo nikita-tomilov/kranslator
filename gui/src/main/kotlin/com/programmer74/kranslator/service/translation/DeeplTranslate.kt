@@ -24,23 +24,28 @@ class DeeplTranslate(
     return setOf(TranslatorLanguage.DE, TranslatorLanguage.EN_US, TranslatorLanguage.RU)
   }
 
-  override fun translate(request: TranslatorRequest): String {
-    return invokeTranslate(request.text, request.source, request.target)
+  override fun translate(request: TranslatorRequest, lineAvailable: (String) -> Unit): List<String> {
+    return invokeTranslate(request.texts, request.source, request.target, lineAvailable)
   }
 
   fun usage() = api.usage(key)
 
   private fun invokeTranslate(
-    text: String,
+    texts: List<String>,
     source: TranslatorLanguage,
-    target: TranslatorLanguage
-  ): String {
-    val body = "text=$text"
+    target: TranslatorLanguage,
+    lineAvailable: (String) -> Unit
+  ): List<String> {
+    val body = texts.joinToString("&") {
+      val clearText = it.trim().replace("&", "\\&")
+      "text=$clearText"
+    }
     val response = api.translate(
         key,
         source.twoLetterCode.uppercase(),
         target.twoLetterCode.uppercase(),
         body)
-    return response.translations.joinToString("\n") { it.text }
+    response.translations.forEach { lineAvailable(it.text) }
+    return response.translations.map { it.text }
   }
 }

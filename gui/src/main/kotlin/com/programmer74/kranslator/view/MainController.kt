@@ -15,6 +15,7 @@ import java.awt.image.BufferedImage
 import java.io.File
 import java.nio.file.Files
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.ImageIO
 
 class MainController {
@@ -25,11 +26,11 @@ class MainController {
 
   fun languages() = translatorInstance.availableLanguages().toList()
 
-  fun translate(requests: List<TranslatorRequest>, callback: (List<String>) -> Unit) {
+  fun translate(request: TranslatorRequest, callback: (List<String>) -> Unit) {
     ex.submit {
-      val results = requests.map { translatorInstance.translate(it) }
+      val result = translatorInstance.translate(request)
       Platform.runLater {
-        callback(results)
+        callback(result)
       }
     }
   }
@@ -120,23 +121,26 @@ class MainController {
     Platform.runLater { ocrBatchCallback.invoke(paragraphs.map { it.originalText }) }
 
     val n = paragraphs.size
+    val i = AtomicInteger(1)
+    val translatedResponse = translatorInstance.translate(
+        TranslatorRequest(
+            paragraphs.map { it.originalText },
+            fromLanguage,
+            toLanguage)
+    ) {
+      log(progressCallback, "${i.getAndIncrement()}/$n Performing translation")
+      Platform.runLater { translateBatchCallback.invoke(listOf(it)) }
+    }
     val translatedParagraphs = paragraphs.mapIndexed { index, it ->
-
-      log(progressCallback, "${index + 1}/$n Performing translation")
-      val translatedText = translatorInstance.translate(
-          TranslatorRequest(
-              it.originalText,
-              fromLanguage,
-              toLanguage))
-      Platform.runLater { translateBatchCallback.invoke(listOf(translatedText)) }
-
-      it.copy(originalText = it.originalText, translatedText = translatedText)
+      it.copy(originalText = it.originalText, translatedText = translatedResponse[index])
     }
 
     log(progressCallback, "Attempting to reassemble the original PDF...")
     val target =
         File(pdf.absolutePath + "--${fromLanguage.twoLetterCode}-${toLanguage.twoLetterCode}.pdf")
-    PDFCreator.createViaText(target, translatedParagraphs) // -- this sometimes cuts off the words; we need to fix it later.
+    PDFCreator.createViaText(
+        target,
+        translatedParagraphs) // -- this sometimes cuts off the words; we need to fix it later.
     //PDFCreator.createViaPNG(target, translatedParagraphs) // -- this does not draw in multiple lines!
     Platform.runLater { resultCallback.invoke(target) }
   }

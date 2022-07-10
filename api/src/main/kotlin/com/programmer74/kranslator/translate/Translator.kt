@@ -4,7 +4,10 @@ interface Translator {
 
   fun availableLanguages(): Set<TranslatorLanguage>
 
-  fun translate(request: TranslatorRequest): String
+  fun translate(request: TranslatorRequest): List<String> {
+    return translate(request) {}
+  }
+  fun translate(request: TranslatorRequest, lineAvailable: (String) -> Unit): List<String>
 }
 
 enum class TranslatorLanguage(
@@ -14,7 +17,10 @@ enum class TranslatorLanguage(
 }
 
 data class TranslatorRequest(
-  val text: String,
+  val texts: List<String>,
   val source: TranslatorLanguage,
   val target: TranslatorLanguage
-)
+) {
+  constructor(text: String, source: TranslatorLanguage, target: TranslatorLanguage) :
+      this(listOf(text), source, target)
+}

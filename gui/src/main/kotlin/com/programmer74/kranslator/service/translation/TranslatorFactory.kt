@@ -22,9 +22,12 @@ object TranslatorFactory : KLogging() {
         return instance.availableLanguages()
       }
 
-      override fun translate(request: TranslatorRequest): String {
-        if (request.source == request.target) return request.text
-        return instance.translate(request)
+      override fun translate(
+        request: TranslatorRequest,
+        lineAvailable: (String) -> Unit
+      ): List<String> {
+        if (request.source == request.target) return request.texts
+        return instance.translate(request, lineAvailable)
       }
     }
   }

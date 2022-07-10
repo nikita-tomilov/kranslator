@@ -28,14 +28,28 @@ class LibreTranslate(
     return setOf(TranslatorLanguage.DE, TranslatorLanguage.EN_US, TranslatorLanguage.RU)
   }
 
-  override fun translate(request: TranslatorRequest): String {
-    if (request.text.length < characterLimit) {
-      return invokeTranslate(request.text, request.source, request.target)
+  override fun translate(
+    request: TranslatorRequest,
+    lineAvailable: (String) -> Unit
+  ): List<String> {
+    return request.texts.map { translate(it, request.source, request.target, lineAvailable) }
+  }
+
+  private fun translate(
+    text: String,
+    source: TranslatorLanguage,
+    target: TranslatorLanguage,
+    lineAvailable: (String) -> Unit
+  ): String {
+    if (text.length < characterLimit) {
+      return invokeTranslate(text, source, target)
     }
-    return request.text.split(" ")
+    return text.split(" ")
         .chunkedBy(characterLimit) { length + 1 }.joinToString(" ") {
           val lineOfWordsWithinLimit = it.joinToString(" ")
-          invokeTranslate(lineOfWordsWithinLimit, request.source, request.target)
+          val res = invokeTranslate(lineOfWordsWithinLimit, source, target)
+          lineAvailable(res)
+          res
         }
   }
 
