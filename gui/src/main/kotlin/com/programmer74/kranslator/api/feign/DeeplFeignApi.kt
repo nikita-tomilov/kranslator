@@ -9,7 +9,7 @@ import feign.RequestLine
 interface DeeplFeignApi {
 
   @RequestLine("POST /translate")
-  @Body("auth_key={key}&source_lang={sourceLang}&target_lang={targetLang}&{body}")
+  @Body("auth_key={key}&source_lang={sourceLang}&target_lang={targetLang}&preserve_formatting=1&{body}")
   fun translate(
     @Param("key") key: String,
     @Param("sourceLang") sourceLang: String,

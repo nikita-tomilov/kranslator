@@ -35,7 +35,11 @@ class DeeplTranslate(
     source: TranslatorLanguage,
     target: TranslatorLanguage
   ): String {
-    val body = "text=$text"
+    val lines = text.lines().map {
+      val clearString = it.trim().replace("&", "\\&")
+      "text=$clearString"
+    }
+    val body = lines.joinToString("&")
     val response = api.translate(
         key,
         source.twoLetterCode.uppercase(),
